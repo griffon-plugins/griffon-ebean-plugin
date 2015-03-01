@@ -1,0 +1,12 @@
+
+:link_griffon_datasource_plugin: link:http://griffon-plugins.github.io/griffon-datasource-plugin[griffon-datasource-plugin, window="_blank"]
+:link_ebean: link:https://github.com/ebean-orm/avaje-ebeanorm[Ebean ORM, window="_blank"]
+
+:api_ebean_server_handler: link:api/griffon/plugins/ebean/EbeanServerHandler.html[EbeanHandler, window="_blank"]
+:api_ebean_server_callback: link:api/griffon/plugins/ebean/EbeanServerCallback.html[EbeanServerCallback, window="_blank"]
+:api_ebean_aware: link:api/griffon/transform/EbeanAware.html[@EbeanAware, window="_blank"]
+:api_ebean_server_bootstrap: link:api/griffon/plugins/ebean/EbeanServerBootstrap.html[EbeanServerBootstrap, window="_blank"]
+
+:path_griffon_ebean_core: {rootdir}/subprojects/griffon-ebean-core
+:path_griffon_ebean_groovy_compile: {rootdir}/subprojects/griffon-ebean-groovy-compile
+

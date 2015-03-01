@@ -1,0 +1,258 @@
+
+[[_Usage]]
+= Usage
+
+The following sections describe how you may use this plugin in an project.
+
+== Configuration
+
+This plugin relies on the {link_griffon_datasource_plugin}. Please follow the instructions to configure this plugin first.
+
+You must create a configuration file named `Ebean` that holds the settings for creating instances of `com.avaje.ebean.EbeanServer`.
+This file follows the same standard configuration mechanism as the application's `Config` file, which means you can define the
+configuration using
+
+ * a properties file
+ * a Java file
+ * a Groovy script
+
+The following example shows the default settings needed to connect the default database taking into account that each
+environment may connect to a different database.
+
+[source,groovy,options="nowrap"]
+.src/main/resources/Ebean.groovy
+----
+include::{path_griffon_ebean_core}/src/test/resources/Ebean.groovy[lines=16..19]
+----
+
+You may configure multiple named EbeanServers (the default server is aptly named `default`) as the following snippet
+shows
+
+[source,groovy,options="nowrap"]
+.src/main/resources/Ebean.groovy
+----
+include::{path_griffon_ebean_core}/src/test/resources/Ebean.groovy[lines=20..-1]
+----
+
+=== Ebean Properties
+
+The following table summarizes the properties that can be specified inside a `ebeanServer` block
+
+[cols="4*", options="header"]
+|====
+
+| Property | Type | Default | Description
+
+| schema
+| String
+| create
+|
+
+| connect_on_startup
+| boolean
+| false
+| Establishes a connection to the datasource at the beginning of the `Startup` phase.
+
+|====
+
+=== Accessing the Datasource
+
+The plugin's <<_modules, module>> registers a `{api_ebean_server_handler}` helper class that defines the base contract
+for accessing a datasource and issue SQL queries to it. This class has the following methods
+
+[source,java,options="nowrap"]
+.griffon.plugins.ebean.EbeanServerHandler.java
+----
+include::{path_griffon_ebean_core}/src/main/java//griffon/plugins/ebean/EbeanServerHandler.java[tags=methods,indent=0]
+----
+
+These method are aware of multiple datasources. If no ebeanServerName is specified when calling them then the default
+datasource will be selected. You can inject an instance of this class anywhere it's needed using `@Inject`. There is one
+callback you may use with this method: `{api_ebean_server_callback}`.
+
+This callback is defined using a functional interface approach, which means you can apply lambda expressions if running
+with JDK8+ or closures if running Groovy.
+
+[source,java,options="nowrap"]
+.griffon.plugins.ebean.EbeanServerCallback.java
+----
+include::{path_griffon_ebean_core}/src/main/java/griffon/plugins/ebean/EbeanServerCallback.java[lines=25..-1]
+----
+
+=== Entities
+
+Ebean can discover all entities as long as they are annotated with `@javax.persistence.Entity`.
+
+[source,groovy,options="nowrap"]
+.src/main/groovy/com/acme/Person.groovy
+----
+include::{path_griffon_ebean_core}/src/test/groovy/griffon/plugins/ebean/Person.groovy[lines=16..-1]
+----
+
+All entities must be enhanced before usage. Ebean can register a java agent at runtime. this agent must be loaded before
+the application starts. You may use the application's launcher for this task.
+
+[source,java]
+----
+AgentLoader.loadAgentFromClasspath("avaje-ebeanorm-agent", "debug=1");
+----
+
+=== Bootstrap
+
+You may execute arbitrary database calls during connection and disconnection from a `{com.avaje.ebean.EbeanServer}`. Simply
+create a class that implements the `{api_ebean_server_bootstrap}` interface and register it within a module, for example
+
+[source,java,options="nowrap"]
+.src/main/java/com/acme/SampleEbeanBootstrap.java
+----
+package com.acme;
+
+import griffon.plugins.ebean.EbeanBootstrap;
+import com.avaje.ebean.EbeanServer;
+
+import javax.annotation.Nonnull;
+import javax.inject.Named;
+
+@Named("sample")
+public class SampleEbeanBootstrap implements EbeanBootstrap {
+    @Override
+    public void init(@Nonnull String ebeanServerName, @Nonnull EbeanServer ebeanServer) {
+        // operations after first connection to datasource
+    }
+
+    @Override
+    public void destroy(@Nonnull String ebeanServerName, @Nonnull EbeanServer ebeanServer) {
+        // operations before disconnecting from the datasource
+    }
+}
+----
+
+[source,java,options="nowrap"]
+.src/main/java/com/acme/ApplicationModule.java
+----
+package com.acme;
+
+import griffon.plugins.ebean.EbeanBootstrap;
+import griffon.core.injection.Module;
+import org.codehaus.griffon.runtime.core.injection.AbstractModule;
+import org.kordamp.jipsy.ServiceProviderFor;
+
+@ServiceProviderFor(Module.class)
+public class ApplicationModule extends AbstractModule {
+    @Override
+    protected void doConfigure() {
+        bind(EbeanBootstrap.class)
+            .to(SampleEbeanBootstrap.class)
+            .asSingleton();
+    }
+}
+----
+
+== Example
+
+The following is a trivial usage of the `{api_ebean_server_handler}` inside a Java service
+
+[source,java,options="nowrap"]
+.com.acme.SampleService.java
+----
+package com.acme;
+
+import griffon.core.artifact.GriffonService;
+import griffon.metadata.ArtifactProviderFor;
+import org.codehaus.griffon.runtime.core.artifact.AbstractGriffonService;
+
+import griffon.plugins.ebean.EbeanHandler;
+import griffon.plugins.ebean.EbeanCallback;
+import org.ebean.Ebean;
+
+import javax.annotation.Nonnull;
+import javax.inject.Inject;
+
+@ArtifactProviderFor(GriffonService.class)
+public class SampleService extends AbstractGriffonService {
+    @Inject
+    private EbeanHandler ebeanHandler;
+
+    public String getPersonName(final int id) {
+         return ebeanHandler.withEbean(new EbeanCallback<String>() {
+             public String handle(@Nonnull String ebeanServerName, @Nonnull Ebean ebean) {
+                 Person person =  ebean.find(Person.class).setId(id).findUnique();
+                 return person != null ? person.getName() : null;
+         });
+    }
+}
+----
+
+Here's the Groovy version of it
+
+[source,groovy,options="nowrap"]
+.com.acme.SampleService.groovy
+----
+package com.acme
+
+import griffon.core.artifact.GriffonService
+import griffon.metadata.ArtifactProviderFor
+
+import griffon.plugins.ebean.EbeanHandler
+import com.avaje.ebean.EbeanServer
+
+import javax.inject.Inject
+
+@ArtifactProviderFor(GriffonService)
+class SampleService {
+    @Inject
+    private EbeanHandler ebeanHandler
+
+    String getPersonName(int id) {
+         ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer ->
+             ebeanServer.find(Person).setId(id).findUnique()?.name
+         }
+    }
+}
+----
+
+== Events
+
+The following events will be triggered by `{api_ebean_server_handler}`
+
+EbeanConnectStart(String ebeanServerName, Map<String, Object> config):: Triggered before connecting to the datasource.
+EbeanConnectEnd(String ebeanServerName, Map<String, Object> config, EbeanServer ebenServer):: Triggered after connecting to the datasource.
+EbeanDisconnectStart(String ebeanServerName, Map<String, Object> config, EbeanServer ebenServer):: Triggered before disconnecting from the datasource.
+EbeanDisconnectEnd(String ebeanServerName, Map<String, Object> config):: Triggered after disconnecting from the datasource.
+
+NOTE: DataSource events may be triggered during connection and disconnection from a `{com.avaje.ebean.EbeanServer}`.
+
+== AST Transformation
+
+You can apply the `{api_ebean_aware}` AST transformation on any class. This injects the behavior of `{api_ebean_server_handler}`
+into said class. The previous Groovy service example can be rewritten as follows
+
+[source,groovy,options="nowrap"]
+.com.acme.SampleService.groovy
+----
+package com.acme
+
+import griffon.core.artifact.GriffonService
+import griffon.metadata.ArtifactProviderFor
+import griffon.transform.EbeanAware
+
+import com.avaje.ebean.EbeanServer
+
+@EbeanAware
+@ArtifactProviderFor(GriffonService)
+class SampleService {
+    String getPersonName(int id) {
+         withEbean { String ebeanServerName, EbeanServer ebeanServer ->
+              ebeanServer.find(Person).setId(id).findUnique()?.name
+         }
+    }
+}
+----
+
+== DSL Descriptors
+
+This plugin provides DSL descriptors for Intellij IDEA and Eclipse (provided you have the Groovy Eclipse plugin installed).
+These descriptors are found inside the `griffon-ebean-groovy-compile-{project-version}.jar`, with locations
+
+ * dsdl/griffon_ebean.dsld
+ * gdsl/griffon_ebean.gdsl

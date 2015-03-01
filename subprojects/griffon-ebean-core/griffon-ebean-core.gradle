@@ -1,0 +1,34 @@
+apply plugin: 'groovy'
+apply plugin: 'org.codehaus.griffon.griffon'
+
+griffon {
+    disableDependencyResolution = false
+    includeGroovyDependencies = false
+    version = rootProject.griffonVersion
+}
+
+apply from: rootProject.file('gradle/code-coverage.gradle')
+
+dependencies {
+    runtime "org.avaje.ebeanorm:avaje-ebeanorm-agent:${ebeanAgentVersion}"
+    compile("org.avaje.ebeanorm:avaje-ebeanorm:${ebeanVersion}") {
+        exclude module: 'servlet-api'
+        exclude module: 'ant'
+        exclude module: 'scala-library'
+        exclude module: 'maven-plugin-api'
+    }
+
+    compile 'org.codehaus.griffon.plugins:griffon-datasource-core:1.2.0'
+
+    testCompileOnly "org.codehaus.griffon:griffon-groovy-compile:${griffon.version}"
+    testCompile 'org.avaje:avaje-agentloader:1.1.2'
+
+
+    testRuntime('com.h2database:h2:1.4.185') { transitive = false }
+    testRuntime "org.slf4j:slf4j-simple:1.7.10"
+
+    testRuntime "org.codehaus.griffon:griffon-guice:${griffon.version}"
+    testRuntime "org.codehaus.griffon:griffon-groovy:${griffon.version}"
+}
+
+compileGroovy.enabled = false

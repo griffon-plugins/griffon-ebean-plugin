@@ -1,0 +1,7 @@
+
+[[_introduction]]
+= Introduction
+
+The Ebean plugin enables lightweight access to datasources using {link_ebean}.
+This plugin does NOT provide domain classes nor dynamic finders like GORM does.
+
