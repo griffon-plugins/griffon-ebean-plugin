@@ -1,0 +1,5 @@
+griffon.plugins.ebean
+griffon.plugins.ebean.exceptions
+griffon.transform
+org.codehaus.griffon.runtime.ebean
+org.codehaus.griffon.runtime.jmx
