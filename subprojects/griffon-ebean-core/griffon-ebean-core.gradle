@@ -19,7 +19,7 @@ dependencies {
         exclude module: 'maven-plugin-api'
     }
 
-    compile 'org.codehaus.griffon.plugins:griffon-datasource-core:2.0.0'
+    compile 'org.codehaus.griffon.plugins:griffon-datasource-core:2.1.0'
 
     testCompileOnly "org.codehaus.griffon:griffon-groovy-compile:${griffon.version}"
     testCompile 'org.avaje:avaje-agentloader:2.1.2'
