@@ -1,11 +1,13 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2014-2021 The author and/or original authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,31 +17,38 @@
  */
 package griffon.plugins.ebean
 
-import com.avaje.ebean.EbeanServer
+import griffon.plugins.ebean.domain.Person
+import griffon.plugins.ebean.exceptions.RuntimeDatabaseException
+import griffon.annotations.inject.BindTo
 import griffon.core.GriffonApplication
-import griffon.core.RunnableWithArgs
-import griffon.core.test.GriffonUnitRule
-import griffon.inject.BindTo
-import griffon.plugins.ebean.exceptions.RuntimeEbeanServerException
-import org.avaje.agentloader.AgentLoader
+import griffon.plugins.datasource.events.DataSourceConnectEndEvent
+import griffon.plugins.datasource.events.DataSourceConnectStartEvent
+import griffon.plugins.datasource.events.DataSourceDisconnectEndEvent
+import griffon.plugins.datasource.events.DataSourceDisconnectStartEvent
+import griffon.plugins.ebean.events.DatabaseConnectEndEvent
+import griffon.plugins.ebean.events.DatabaseConnectStartEvent
+import griffon.plugins.ebean.events.DatabaseDisconnectEndEvent
+import griffon.plugins.ebean.events.DatabaseDisconnectStartEvent
+import griffon.test.core.GriffonUnitRule
+import io.ebean.Database
 import org.junit.Rule
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import javax.application.event.EventHandler
 import javax.inject.Inject
 
 @Unroll
 class EbeanSpec extends Specification {
     static {
         System.setProperty('org.slf4j.simpleLogger.defaultLogLevel', 'trace')
-        AgentLoader.loadAgentFromClasspath('avaje-ebeanorm-agent', 'debug=1')
     }
 
     @Rule
     public final GriffonUnitRule griffon = new GriffonUnitRule()
 
     @Inject
-    private EbeanServerHandler ebeanHandler
+    private DatabaseHandler databaseHandler
 
     @Inject
     private GriffonApplication application
@@ -47,35 +56,30 @@ class EbeanSpec extends Specification {
     void 'Open and close default ebean'() {
         given:
         List eventNames = [
-            'EbeanConnectStart', 'DataSourceConnectStart',
-            'DataSourceConnectEnd', 'EbeanConnectEnd',
-            'EbeanDisconnectStart', 'DataSourceDisconnectStart',
-            'DataSourceDisconnectEnd', 'EbeanDisconnectEnd'
+            'DatabaseConnectStartEvent', 'DataSourceConnectStartEvent',
+            'DataSourceConnectEndEvent', 'DatabaseConnectEndEvent',
+            'DatabaseDisconnectStartEvent', 'DataSourceDisconnectStartEvent',
+            'DataSourceDisconnectEndEvent', 'DatabaseDisconnectEndEvent'
         ]
-        List events = []
-        eventNames.each { name ->
-            application.eventRouter.addEventListener(name, ({ Object... args ->
-                events << [name: name, args: args]
-            } as RunnableWithArgs))
-        }
-
+        TestEventHandler testEventHandler = new TestEventHandler()
+        application.eventRouter.subscribe(testEventHandler)
         when:
-        ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer ->
+        databaseHandler.withEbean { String databaseName, Database database ->
             true
         }
-        ebeanHandler.closeEbean()
+        databaseHandler.closeEbean()
         // second call should be a NOOP
-        ebeanHandler.closeEbean()
+        databaseHandler.closeEbean()
 
         then:
-        events.size() == 8
-        events.name == eventNames
+        testEventHandler.events.size() == 8
+        testEventHandler.events == eventNames
     }
 
-    void 'Connect to default EbeanServer'() {
+    void 'Connect to default Database'() {
         expect:
-        ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer ->
-            ebeanServerName == 'default' && ebeanServer
+        databaseHandler.withEbean { String databaseName, Database database ->
+            databaseName == 'default' && database
         }
     }
 
@@ -84,7 +88,7 @@ class EbeanSpec extends Specification {
         assert !bootstrap.initWitness
 
         when:
-        ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer -> }
+        databaseHandler.withEbean { String databaseName, Database database -> }
 
         then:
         bootstrap.initWitness
@@ -97,18 +101,18 @@ class EbeanSpec extends Specification {
         assert !bootstrap.destroyWitness
 
         when:
-        ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer -> }
-        ebeanHandler.closeEbean()
+        databaseHandler.withEbean { String databaseName, Database database -> }
+        databaseHandler.closeEbean()
 
         then:
         bootstrap.initWitness
         bootstrap.destroyWitness
     }
 
-    void 'Can connect to #name EbeanServer'() {
+    void 'Can connect to #name Database'() {
         expect:
-        ebeanHandler.withEbean(name) { String ebeanServerName, EbeanServer ebeanServer ->
-            ebeanServerName == name && ebeanServer
+        databaseHandler.withEbean(name) { String databaseName, Database database ->
+            databaseName == name && database
         }
 
         where:
@@ -118,9 +122,9 @@ class EbeanSpec extends Specification {
         'people'   | _
     }
 
-    void 'Bogus EbeanServer name (#name) results in error'() {
+    void 'Bogus Database name (#name) results in error'() {
         when:
-        ebeanHandler.withEbean(name) { String ebeanServerName, EbeanServer ebeanServer ->
+        databaseHandler.withEbean(name) { String databaseName, Database database ->
             true
         }
 
@@ -136,7 +140,7 @@ class EbeanSpec extends Specification {
 
     void 'Execute statements on people table'() {
         when:
-        List peopleIn = ebeanHandler.withEbean() { String ebeanServerName, EbeanServer ebeanServer ->
+        List peopleIn = databaseHandler.withEbean() { String databaseName, Database database ->
             [[id: 1, name: 'Danno', lastname: 'Ferrin'],
              [id: 2, name: 'Andres', lastname: 'Almiray'],
              [id: 3, name: 'James', lastname: 'Williams'],
@@ -144,12 +148,12 @@ class EbeanSpec extends Specification {
              [id: 5, name: 'Jim', lastname: 'Shingler'],
              [id: 6, name: 'Alexander', lastname: 'Klein'],
              [id: 7, name: 'Rene', lastname: 'Groeschke']].each { data ->
-                ebeanServer.save(new Person(data))
+                database.save(new Person(data))
             }
         }
 
-        List peopleOut = ebeanHandler.withEbean() { String ebeanServerName, EbeanServer ebeanServer ->
-            ebeanServer.find(Person).findList()*.asMap()
+        List peopleOut = databaseHandler.withEbean() { String databaseName, Database database ->
+            database.find(Person).findList()*.asMap()
         }
 
         then:
@@ -158,14 +162,58 @@ class EbeanSpec extends Specification {
 
     void 'A runtime exception is thrown within ebean handling'() {
         when:
-        ebeanHandler.withEbean { String ebeanServerName, EbeanServer ebeanServer ->
-            ebeanServer.save(null)
+        databaseHandler.withEbean { String databaseName, Database database ->
+            database.save(null)
         }
 
         then:
-        thrown(RuntimeEbeanServerException)
+        thrown(RuntimeDatabaseException)
     }
 
     @BindTo(EbeanBootstrap)
     private TestEbeanBootstrap bootstrap = new TestEbeanBootstrap()
+
+    private class TestEventHandler {
+        List<String> events = []
+
+        @EventHandler
+        void handleDataSourceConnectStartEvent(DataSourceConnectStartEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDataSourceConnectEndEvent(DataSourceConnectEndEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDataSourceDisconnectStartEvent(DataSourceDisconnectStartEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDataSourceDisconnectEndEvent(DataSourceDisconnectEndEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDatabaseConnectStartEvent(DatabaseConnectStartEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDatabaseConnectEndEvent(DatabaseConnectEndEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDatabaseDisconnectStartEvent(DatabaseDisconnectStartEvent event) {
+            events << event.class.simpleName
+        }
+
+        @EventHandler
+        void handleDatabaseDisconnectEndEvent(DatabaseDisconnectEndEvent event) {
+            events << event.class.simpleName
+        }
+    }
 }

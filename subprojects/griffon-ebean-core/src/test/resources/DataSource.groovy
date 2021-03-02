@@ -1,11 +1,13 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2014-2021 The author and/or original authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,19 +30,19 @@ environments {
     development {
         dataSource {
             dbCreate = 'skip' // one of ['create', 'skip']
-            url = 'jdbc:h2:mem:@application.name@-dev'
+            url = 'jdbc:h2:mem:${application_name}-dev'
         }
     }
     test {
         dataSource {
             dbCreate = 'skip'
-            url = 'jdbc:h2:mem:@application.name@-test'
+            url = 'jdbc:h2:mem:${application_name}-test'
         }
     }
     production {
         dataSource {
             dbCreate = 'skip'
-            url = 'jdbc:h2:mem:@application.name@-prod'
+            url = 'jdbc:h2:mem:${application_name}-prod'
         }
     }
 }
@@ -51,13 +53,13 @@ dataSources {
         username = 'sa'
         password = ''
         dbCreate = 'skip'
-        url = 'jdbc:h2:mem:@application.name@-internal'
+        url = 'jdbc:h2:mem:${application_name}-internal'
     }
     people {
         driverClassName = 'org.h2.Driver'
         username = 'sa'
         password = ''
         dbCreate = 'skip'
-        url = 'jdbc:h2:mem:@application.name@-people'
+        url = 'jdbc:h2:mem:${application_name}-people'
     }
 }

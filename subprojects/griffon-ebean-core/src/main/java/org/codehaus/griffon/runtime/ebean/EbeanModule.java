@@ -1,11 +1,13 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2014-2021 The author and/or original authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,16 +17,16 @@
  */
 package org.codehaus.griffon.runtime.ebean;
 
+import griffon.annotations.inject.DependsOn;
 import griffon.core.Configuration;
 import griffon.core.addon.GriffonAddon;
 import griffon.core.injection.Module;
-import griffon.inject.DependsOn;
-import griffon.plugins.ebean.EbeanServerHandler;
-import griffon.plugins.ebean.EbeanServerFactory;
-import griffon.plugins.ebean.EbeanServerStorage;
+import griffon.plugins.ebean.DatabaseFactory;
+import griffon.plugins.ebean.DatabaseHandler;
+import griffon.plugins.ebean.DatabaseStorage;
 import org.codehaus.griffon.runtime.core.injection.AbstractModule;
 import org.codehaus.griffon.runtime.util.ResourceBundleProvider;
-import org.kordamp.jipsy.ServiceProviderFor;
+import org.kordamp.jipsy.annotations.ServiceProviderFor;
 
 import javax.inject.Named;
 import java.util.ResourceBundle;
@@ -51,16 +53,16 @@ public class EbeanModule extends AbstractModule {
             .to(DefaultEbeanConfiguration.class)
             .asSingleton();
 
-        bind(EbeanServerStorage.class)
-            .to(DefaultEbeanServerStorage.class)
+        bind(DatabaseStorage.class)
+            .to(DefaultDatabaseStorage.class)
             .asSingleton();
 
-        bind(EbeanServerFactory.class)
-            .to(DefaultEbeanServerFactory.class)
+        bind(DatabaseFactory.class)
+            .to(DefaultDatabaseFactory.class)
             .asSingleton();
 
-        bind(EbeanServerHandler.class)
-            .to(DefaultEbeanServerHandler.class)
+        bind(DatabaseHandler.class)
+            .to(DefaultDatabaseHandler.class)
             .asSingleton();
 
         bind(GriffonAddon.class)

@@ -15,34 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package griffon.plugins.ebean;
 
-databases {
-    internal {
+import griffon.plugins.ebean.exceptions.RuntimeDatabaseException;
 
-    }
-    people {
+import griffon.annotations.core.Nonnull;
+import griffon.annotations.core.Nullable;
 
-    }
-}
+/**
+ * @author Andres Almiray
+ */
+public interface DatabaseHandler {
+    // tag::methods[]
+    @Nullable
+    <R> R withEbean(@Nonnull DatabaseCallback<R> callback)
+        throws RuntimeDatabaseException;
 
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
+    @Nullable
+    <R> R withEbean(@Nonnull String databaseName, @Nonnull DatabaseCallback<R> callback)
+        throws RuntimeDatabaseException;
+
+    void closeEbean();
+
+    void closeEbean(@Nonnull String databaseName);
+    // end::methods[]
 }

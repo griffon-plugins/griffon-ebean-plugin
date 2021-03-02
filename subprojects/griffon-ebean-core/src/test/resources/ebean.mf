@@ -1,0 +1,4 @@
+x-entity-packages: griffon.plugins.ebean.domain
+x-transactional-packages: griffon.plugins.ebean
+x-querybean-packages: griffon.plugins.ebean
+profile-location: true

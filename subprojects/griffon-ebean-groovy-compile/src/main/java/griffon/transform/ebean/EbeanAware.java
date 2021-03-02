@@ -15,34 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package griffon.transform.ebean;
 
-databases {
-    internal {
+import griffon.plugins.ebean.DatabaseHandler;
 
-    }
-    people {
+import java.lang.annotation.*;
 
-    }
-}
-
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
+/**
+ * <p>Annotates a class.</p>
+ *
+ * @author Andres Almiray
+ * @see DatabaseHandler
+ */
+@Documented
+@Retention(RetentionPolicy.SOURCE)
+@Target({ElementType.TYPE})
+public @interface EbeanAware {
 }

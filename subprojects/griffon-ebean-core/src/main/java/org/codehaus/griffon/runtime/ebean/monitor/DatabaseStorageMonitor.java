@@ -15,34 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package org.codehaus.griffon.runtime.ebean.monitor;
 
-databases {
-    internal {
+import griffon.annotations.core.Nonnull;
+import griffon.core.env.Metadata;
+import griffon.plugins.ebean.DatabaseStorage;
+import io.ebean.Database;
+import org.codehaus.griffon.runtime.monitor.AbstractObjectStorageMonitor;
 
+/**
+ * @author Andres Almiray
+ */
+public class DatabaseStorageMonitor extends AbstractObjectStorageMonitor<Database> implements DatabaseStorageMonitorMXBean {
+    public DatabaseStorageMonitor(@Nonnull Metadata metadata, @Nonnull DatabaseStorage delegate) {
+        super(metadata, delegate);
     }
-    people {
 
-    }
-}
-
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
+    @Override
+    protected String getStorageName() {
+        return "ebean";
     }
 }

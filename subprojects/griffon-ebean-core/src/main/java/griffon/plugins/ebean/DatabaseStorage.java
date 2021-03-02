@@ -15,34 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package griffon.plugins.ebean;
 
-databases {
-    internal {
+import griffon.core.storage.ObjectStorage;
+import io.ebean.Database;
 
-    }
-    people {
-
-    }
-}
-
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
+/**
+ * @author Andres Almiray
+ */
+public interface DatabaseStorage extends ObjectStorage<Database> {
 }

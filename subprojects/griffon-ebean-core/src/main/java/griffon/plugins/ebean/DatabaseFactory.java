@@ -15,34 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package griffon.plugins.ebean;
 
-databases {
-    internal {
+import griffon.annotations.core.Nonnull;
+import griffon.core.storage.ObjectFactory;
+import io.ebean.Database;
 
-    }
-    people {
+import java.util.Map;
+import java.util.Set;
 
-    }
-}
+/**
+ * @author Andres Almiray
+ */
+public interface DatabaseFactory extends ObjectFactory<Database> {
+    @Nonnull
+    Set<String> getDatabaseNames();
 
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
+    @Nonnull
+    Map<String, Object> getConfigurationFor(@Nonnull String databaseName);
 }

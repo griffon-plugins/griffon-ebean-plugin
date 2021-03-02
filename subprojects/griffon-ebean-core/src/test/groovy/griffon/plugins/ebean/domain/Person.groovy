@@ -15,34 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package griffon.plugins.ebean.domain
 
-databases {
-    internal {
+import groovy.transform.ToString
 
-    }
-    people {
+import javax.persistence.Entity
+import javax.persistence.Id
 
-    }
-}
+@ToString
+@Entity
+class Person {
+    @Id
+    int id
+    String name
+    String lastname
 
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
+    Map asMap() {
+        [
+            id      : id,
+            name    : name,
+            lastname: lastname
+        ]
     }
 }

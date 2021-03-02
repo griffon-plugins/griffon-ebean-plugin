@@ -1,11 +1,13 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2014-2021 The author and/or original authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,8 +17,9 @@
  */
 package org.codehaus.griffon.compile.ebean.ast.transform;
 
-import griffon.plugins.ebean.EbeanServerHandler;
-import griffon.transform.EbeanAware;
+import griffon.annotations.core.Nonnull;
+import griffon.plugins.ebean.DatabaseHandler;
+import griffon.transform.ebean.EbeanAware;
 import org.codehaus.griffon.compile.core.AnnotationHandler;
 import org.codehaus.griffon.compile.core.AnnotationHandlerFor;
 import org.codehaus.griffon.compile.core.ast.transform.AbstractASTTransformation;
@@ -32,8 +35,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-
 import static org.codehaus.griffon.compile.core.ast.GriffonASTUtils.injectInterface;
 
 /**
@@ -45,23 +46,8 @@ import static org.codehaus.griffon.compile.core.ast.GriffonASTUtils.injectInterf
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class EbeanAwareASTTransformation extends AbstractASTTransformation implements EbeanAwareConstants, AnnotationHandler {
     private static final Logger LOG = LoggerFactory.getLogger(EbeanAwareASTTransformation.class);
-    private static final ClassNode EBEAN_SERVER_HANDLER_CNODE = makeClassSafe(EbeanServerHandler.class);
-    private static final ClassNode EBEAN_SERVER_AWARE_CNODE = makeClassSafe(EbeanAware.class);
-
-    /**
-     * Convenience method to see if an annotated node is {@code @EbeanAware}.
-     *
-     * @param node the node to check
-     * @return true if the node is an event publisher
-     */
-    public static boolean hasEbeanAwareAnnotation(AnnotatedNode node) {
-        for (AnnotationNode annotation : node.getAnnotations()) {
-            if (EBEAN_SERVER_AWARE_CNODE.equals(annotation.getClassNode())) {
-                return true;
-            }
-        }
-        return false;
-    }
+    private static final ClassNode DATABASE_HANDLER_CNODE = makeClassSafe(DatabaseHandler.class);
+    private static final ClassNode DATABASE_AWARE_CNODE = makeClassSafe(EbeanAware.class);
 
     /**
      * Handles the bulk of the processing, mostly delegating to other methods.
@@ -74,9 +60,24 @@ public class EbeanAwareASTTransformation extends AbstractASTTransformation imple
         addEbeanHandlerIfNeeded(source, (AnnotationNode) nodes[0], (ClassNode) nodes[1]);
     }
 
+    /**
+     * Convenience method to see if an annotated node is {@code @EbeanAware}.
+     *
+     * @param node the node to check
+     * @return true if the node is an event publisher
+     */
+    public static boolean hasEbeanAwareAnnotation(AnnotatedNode node) {
+        for (AnnotationNode annotation : node.getAnnotations()) {
+            if (DATABASE_AWARE_CNODE.equals(annotation.getClassNode())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void addEbeanHandlerIfNeeded(SourceUnit source, AnnotationNode annotationNode, ClassNode classNode) {
-        if (needsDelegate(classNode, source, METHODS, EbeanAware.class.getSimpleName(), EBEAN_SERVER_HANDLER_TYPE)) {
-            LOG.debug("Injecting {} into {}", EBEAN_SERVER_HANDLER_TYPE, classNode.getName());
+        if (needsDelegate(classNode, source, METHODS, EbeanAware.class.getSimpleName(), DATABASE_HANDLER_TYPE)) {
+            LOG.debug("Injecting {} into {}", DATABASE_HANDLER_TYPE, classNode.getName());
             apply(classNode);
         }
     }
@@ -87,8 +88,8 @@ public class EbeanAwareASTTransformation extends AbstractASTTransformation imple
      * @param declaringClass the class to which we add the support field and methods
      */
     public static void apply(@Nonnull ClassNode declaringClass) {
-        injectInterface(declaringClass, EBEAN_SERVER_HANDLER_CNODE);
-        Expression ebeanHandler = injectedField(declaringClass, EBEAN_SERVER_HANDLER_CNODE, EBEAN_SERVER_HANDLER_FIELD_NAME);
-        addDelegateMethods(declaringClass, EBEAN_SERVER_HANDLER_CNODE, ebeanHandler);
+        injectInterface(declaringClass, DATABASE_HANDLER_CNODE);
+        Expression ebeanHandler = injectedField(declaringClass, DATABASE_HANDLER_CNODE, DATABASE_HANDLER_FIELD_NAME);
+        addDelegateMethods(declaringClass, DATABASE_HANDLER_CNODE, ebeanHandler);
     }
 }

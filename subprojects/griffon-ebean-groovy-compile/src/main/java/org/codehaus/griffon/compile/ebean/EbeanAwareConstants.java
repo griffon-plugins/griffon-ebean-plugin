@@ -1,11 +1,13 @@
 /*
- * Copyright 2014-2017 the original author or authors.
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Copyright 2014-2021 The author and/or original authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,16 +34,16 @@ import static org.codehaus.griffon.compile.core.MethodDescriptor.types;
  * @author Andres Almiray
  */
 public interface EbeanAwareConstants extends BaseConstants {
-    String EBEAN_SERVER_TYPE = "com.avaje.ebean.EbeanServer";
-    String EBEAN_SERVER_HANDLER_TYPE = "griffon.plugins.ebean.EbeanServerHandler";
-    String EBEAN_SERVER_CALLBACK_TYPE = "griffon.plugins.ebean.EbeanServerCallback";
-    String RUNTIME_EBEAN_SERVER_EXCEPTION_TYPE = "griffon.plugins.ebean.exceptions.RuntimeEbeanServerException";
-    String EBEAN_SERVER_HANDLER_PROPERTY = "ebeanServerHandler";
-    String EBEAN_SERVER_HANDLER_FIELD_NAME = "this$" + EBEAN_SERVER_HANDLER_PROPERTY;
+    String DATABASE_TYPE = "io.ebean.Database";
+    String DATABASE_HANDLER_TYPE = "griffon.plugins.ebean.DatabaseHandler";
+    String DATABASE_CALLBACK_TYPE = "griffon.plugins.ebean.DatabaseCallback";
+    String RUNTIME_DATABASE_EXCEPTION_TYPE = "griffon.plugins.ebean.exceptions.RuntimeDatabaseException";
+    String DATABASE_HANDLER_PROPERTY = "databaseHandler";
+    String DATABASE_HANDLER_FIELD_NAME = "this$" + DATABASE_HANDLER_PROPERTY;
 
     String METHOD_WITH_EBEAN = "withEbean";
     String METHOD_CLOSE_EBEAN = "closeEbean";
-    String SESSION_FACTORY_NAME = "ebeanServerName";
+    String SESSION_FACTORY_NAME = "databaseName";
     String CALLBACK = "callback";
 
     MethodDescriptor[] METHODS = new MethodDescriptor[]{
@@ -52,26 +54,26 @@ public interface EbeanAwareConstants extends BaseConstants {
         method(
             type(VOID),
             METHOD_CLOSE_EBEAN,
-            args(annotatedType(types(type(JAVAX_ANNOTATION_NONNULL)), JAVA_LANG_STRING))
+            args(annotatedType(types(type(ANNOTATION_NONNULL)), JAVA_LANG_STRING))
         ),
 
         annotatedMethod(
-            annotations(JAVAX_ANNOTATION_NONNULL),
+            annotations(ANNOTATION_NONNULL),
             type(R),
             typeParams(R),
             METHOD_WITH_EBEAN,
-            args(annotatedType(annotations(JAVAX_ANNOTATION_NONNULL), EBEAN_SERVER_CALLBACK_TYPE, R)),
-            throwing(type(RUNTIME_EBEAN_SERVER_EXCEPTION_TYPE))
+            args(annotatedType(annotations(ANNOTATION_NONNULL), DATABASE_CALLBACK_TYPE, R)),
+            throwing(type(RUNTIME_DATABASE_EXCEPTION_TYPE))
         ),
         annotatedMethod(
-            types(type(JAVAX_ANNOTATION_NONNULL)),
+            types(type(ANNOTATION_NONNULL)),
             type(R),
             typeParams(R),
             METHOD_WITH_EBEAN,
             args(
-                annotatedType(annotations(JAVAX_ANNOTATION_NONNULL), JAVA_LANG_STRING),
-                annotatedType(annotations(JAVAX_ANNOTATION_NONNULL), EBEAN_SERVER_CALLBACK_TYPE, R)),
-            throwing(type(RUNTIME_EBEAN_SERVER_EXCEPTION_TYPE))
+                annotatedType(annotations(ANNOTATION_NONNULL), JAVA_LANG_STRING),
+                annotatedType(annotations(ANNOTATION_NONNULL), DATABASE_CALLBACK_TYPE, R)),
+            throwing(type(RUNTIME_DATABASE_EXCEPTION_TYPE))
         )
     };
 }

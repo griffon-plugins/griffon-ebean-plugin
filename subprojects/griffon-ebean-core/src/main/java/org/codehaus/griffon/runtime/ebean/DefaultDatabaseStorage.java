@@ -15,34 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-database {
-    schema = 'create' // none | dropCreate | create | migration | createOnly | migrationDropCreate
-    // specify any properties from io.ebean.config.DatabaseConfig
-}
+package org.codehaus.griffon.runtime.ebean;
 
-databases {
-    internal {
+import griffon.plugins.ebean.DatabaseStorage;
+import io.ebean.Database;
+import org.codehaus.griffon.runtime.core.storage.DefaultObjectStorage;
 
-    }
-    people {
-
-    }
-}
-
-environments {
-    development {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    test {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
-    production {
-        database {
-            // someConfigurationProperty = someValue
-        }
-    }
+/**
+ * @author Andres Almiray
+ */
+public class DefaultDatabaseStorage extends DefaultObjectStorage<Database> implements DatabaseStorage {
 }
